@@ -205,11 +205,11 @@ void eof_snap_logic(EOF_SNAP_DATA * sp, unsigned long p)
 		/* make sure we found a suitable snap beat before proceeding */
 		if(sp->beat >= 0)
 		{
-			if(sp->beat >= eof_song->beats - 2)
+			if(sp->beat >= eof_song->beats - 2 && (sp->beat >= 2))
 			{
 				sp->beat_length = eof_song->beat[sp->beat - 1]->pos - eof_song->beat[sp->beat - 2]->pos;
 			}
-			else
+			else if(sp->beat + 1 < eof_song->beats)
 			{
 				sp->beat_length = eof_song->beat[sp->beat + 1]->pos - eof_song->beat[sp->beat]->pos;
 			}
@@ -436,11 +436,11 @@ void eof_snap_length_logic(EOF_SNAP_DATA * sp)
 		if(sp->pos >= eof_song->beat[sp->beat + 1]->pos)
 		{
 			sp->beat = sp->beat + 1;
-			if(sp->beat >= eof_song->beats - 2)
+			if(sp->beat >= eof_song->beats - 2 && (sp->beat >= 2))
 			{
 				sp->beat_length = eof_song->beat[sp->beat - 1]->pos - eof_song->beat[sp->beat - 2]->pos;
 			}
-			else
+			else if(sp->beat + 1 < eof_song->beats)
 			{
 				sp->beat_length = eof_song->beat[sp->beat + 1]->pos - eof_song->beat[sp->beat]->pos;
 			}

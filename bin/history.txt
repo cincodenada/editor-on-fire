@@ -1,6 +1,19 @@
 EOF Version History
 -------------------
 
+1.71:
+
+Fixed crash bug in "Paste From" functions.
+
+Fixed the lyric padding logic by ensuring the events were sorted before
+processing lyric phrase padding.
+
+Fixed a bug in the grid snap logic that would crash on charts that were less
+than 3 beats long or so.
+
+Added a lyric padding loop to add padding to vocal percussion phrases.
+
+
 1.7:
 
 Fixed an issue where "crazy" notes were allowed to lap notes in the same lane.

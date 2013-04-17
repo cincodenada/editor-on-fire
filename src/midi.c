@@ -763,8 +763,9 @@ int eof_export_midi(EOF_SONG * sp, char * fn)
 		}
 
 		/* insert padding as necessary between a lyric phrase on marker and the following lyric */
-		#define EOF_LYRIC_PHRASE_PADDING 5
+		#define EOF_LYRIC_PHRASE_PADDING 1
 		unsigned long last_phrase = 0;	//Stores the absolute delta time of the last Note 105 On
+		qsort(eof_midi_event, eof_midi_events, sizeof(EOF_MIDI_EVENT *), qsort_helper3); //Lyric events must be sorted for padding logic to work
 		for(i = 0; i < eof_midi_events; i++)
 		{
 			if((eof_midi_event[i]->type == 0x90) && (eof_midi_event[i]->note == 105))
@@ -779,6 +780,16 @@ int eof_export_midi(EOF_SONG * sp, char * fn)
 					{	//If the lyric event and pitch can be padded without overlapping the pitch off note, do it
 						eof_midi_event[i]->pos = last_phrase + EOF_LYRIC_PHRASE_PADDING;	//Change the delta time of the lyric event
 						eof_midi_event[i+1]->pos = last_phrase + EOF_LYRIC_PHRASE_PADDING;	//Change the delta time of the note on event
+					}
+				}
+			}
+			else if((i + 1 < eof_midi_events) && (eof_midi_event[i]->type == 0x90) && (eof_midi_event[i]->note == VOCALPERCUSSION) && (eof_midi_event[i+1]->type == 0x80) && (eof_midi_event[i+1]->note == VOCALPERCUSSION))
+			{ //If this is a vocal percussion note on followed by a vocal percussion off
+				if(eof_midi_event[i]->pos < last_phrase + EOF_LYRIC_PHRASE_PADDING)
+				{ //If the vocal percussion on is not at least EOF_LYRIC_PHRASE_PADDING deltas away from the lyric phrase on marker
+					if(last_phrase + EOF_LYRIC_PHRASE_PADDING < eof_midi_event[i+1]->pos)
+					{ //If the vocal percussion on can be padded without overlapping the vocal percussion off note, do it
+						eof_midi_event[i]->pos = last_phrase + EOF_LYRIC_PHRASE_PADDING; //Change the delta time of the vocal percussion event
 					}
 				}
 			}
