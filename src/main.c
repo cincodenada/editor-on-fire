@@ -40,6 +40,7 @@
 #include "mix.h"
 #include "control.h"
 #include "waveform.h"
+#include "spectrogram.h"
 #include "silence.h"
 #include "tuning.h"
 #include "ini_import.h"
