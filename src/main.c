@@ -175,6 +175,7 @@ char        eof_loaded_song_name[1024] = {0};
 char        eof_loaded_ogg_name[1024] = {0};
 char        eof_window_title[4096] = {0};
 int         eof_quit = 0;
+int         eof_quit_mustask = 0;
 int         eof_note_type = EOF_NOTE_AMAZING;	//The active difficulty
 int         eof_selected_track = EOF_TRACK_GUITAR;
 int         eof_vocals_selected = 0;	//Is set to nonzero if the active track is a vocal track
@@ -3434,6 +3435,11 @@ void eof_destroy_data(void)
 	eof_symbol_font = NULL;
 }
 
+void eof_close_button(void) {
+	eof_quit_mustask = 1;
+	eof_quit = 1;
+}
+
 int eof_initialize(int argc, char * argv[])
 {
 	int i, eof_zoom_backup;
@@ -3448,6 +3454,7 @@ int eof_initialize(int argc, char * argv[])
 	allegro_init();
 
 	set_window_title("EOF - No Song");
+	set_close_button_callback(eof_close_button);
 	if(install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL))
 	{	//If Allegro failed to initialize the sound AND midi
 //		allegro_message("Can't set up MIDI!  Error: %s\nAttempting to init audio only",allegro_error);
@@ -4428,112 +4435,121 @@ int main(int argc, char * argv[])
 
 	eof_log("\tEntering main program loop", 1);
 
-	while(!eof_quit)
+	do 
 	{
-		/* frame skip mode */
-		while(gametime_get_frames() - gametime_tick > 0)
+		while(!eof_quit)
 		{
-			eof_logic();
-			updated = 0;
-			++gametime_tick;
-		}
+			/* frame skip mode */
+			while(gametime_get_frames() - gametime_tick > 0)
+			{
+				eof_logic();
+				updated = 0;
+				++gametime_tick;
+			}
 
-		/* update and draw the screen */
-		if(!updated)
-		{
-			eof_render();
-			updated = 1;
-		}
+			/* update and draw the screen */
+			if(!updated)
+			{
+				eof_render();
+				updated = 1;
+			}
 
-		/* update the music */
-		if(!eof_music_paused)
-		{
-			int ret = alogg_poll_ogg(eof_music_track);
-			eof_music_actual_pos = alogg_get_pos_msecs_ogg(eof_music_track);
-			if(eof_mix_midi_tones_enabled)
-				eof_process_midi_queue(eof_music_actual_pos);	//Process the start/stop times of the MIDI tones
-			if((ret == ALOGG_POLL_PLAYJUSTFINISHED) || (ret == ALOGG_POLL_NOTPLAYING) || (ret == ALOGG_POLL_FRAMECORRUPT) || (ret == ALOGG_POLL_INTERNALERROR) || (eof_music_actual_pos > alogg_get_length_msecs_ogg(eof_music_track)))
-			{	//If ALOGG reported a completed/error condition or if the reported position is greater than the length of the audio
-				eof_music_pos = eof_music_actual_pos + eof_av_delay;
-				eof_music_paused = 1;
+			/* update the music */
+			if(!eof_music_paused)
+			{
+				int ret = alogg_poll_ogg(eof_music_track);
+				eof_music_actual_pos = alogg_get_pos_msecs_ogg(eof_music_track);
+				if(eof_mix_midi_tones_enabled)
+					eof_process_midi_queue(eof_music_actual_pos);	//Process the start/stop times of the MIDI tones
+				if((ret == ALOGG_POLL_PLAYJUSTFINISHED) || (ret == ALOGG_POLL_NOTPLAYING) || (ret == ALOGG_POLL_FRAMECORRUPT) || (ret == ALOGG_POLL_INTERNALERROR) || (eof_music_actual_pos > alogg_get_length_msecs_ogg(eof_music_track)))
+				{	//If ALOGG reported a completed/error condition or if the reported position is greater than the length of the audio
+					eof_music_pos = eof_music_actual_pos + eof_av_delay;
+					eof_music_paused = 1;
+				}
+				else
+				{
+					eof_music_actual_pos = alogg_get_pos_msecs_ogg(eof_music_track);
+					if(eof_smooth_pos)
+					{
+						if((eof_music_actual_pos > eof_music_pos) || eof_music_paused)
+						{
+							eof_music_pos = eof_music_actual_pos;
+						}
+					}
+				}
+			}
+
+			/* update the music for playing a portion from catalog */
+			else if(eof_music_catalog_playback)
+			{
+				int ret = alogg_poll_ogg(eof_music_track);
+				if(ret == ALOGG_POLL_PLAYJUSTFINISHED)
+				{
+					eof_music_catalog_pos = eof_song->catalog->entry[eof_selected_catalog_entry].start_pos + eof_av_delay;
+					eof_music_catalog_playback = 0;
+				}
+				else if((ret == ALOGG_POLL_NOTPLAYING) || (ret == ALOGG_POLL_FRAMECORRUPT) || (ret == ALOGG_POLL_INTERNALERROR))
+				{
+					eof_music_catalog_pos = eof_song->catalog->entry[eof_selected_catalog_entry].start_pos + eof_av_delay;
+					eof_music_catalog_playback = 0;
+				}
+				else
+				{
+					int ap = alogg_get_pos_msecs_ogg(eof_music_track);
+					if((ap > eof_music_catalog_pos) || !eof_music_catalog_playback)
+					{
+						eof_music_catalog_pos = ap;
+					}
+				}
 			}
 			else
 			{
-				eof_music_actual_pos = alogg_get_pos_msecs_ogg(eof_music_track);
-				if(eof_smooth_pos)
+				if(eof_new_idle_system)
 				{
-					if((eof_music_actual_pos > eof_music_pos) || eof_music_paused)
+					/* rest to save CPU */
+					if(eof_has_focus)
 					{
-						eof_music_pos = eof_music_actual_pos;
+						#ifndef ALLEGRO_WINDOWS
+							Idle(eof_cpu_saver);
+						#else
+							if(eof_disable_vsync)
+							{
+								Idle(eof_cpu_saver);
+							}
+						#endif
+					}
+
+					/* make program "sleep" until it is back in focus */
+					else
+					{
+						Idle(500);
+						gametime_reset();
+					}
+				}
+				else
+				{
+					/* rest to save CPU */
+					if(eof_has_focus)
+					{
+						rest(eof_cpu_saver);
+					}
+
+					/* make program "sleep" until it is back in focus */
+					else
+					{
+						rest(500);
+						gametime_reset();
 					}
 				}
 			}
 		}
-
-		/* update the music for playing a portion from catalog */
-		else if(eof_music_catalog_playback)
+		if(eof_quit_mustask)
 		{
-			int ret = alogg_poll_ogg(eof_music_track);
-			if(ret == ALOGG_POLL_PLAYJUSTFINISHED)
-			{
-				eof_music_catalog_pos = eof_song->catalog->entry[eof_selected_catalog_entry].start_pos + eof_av_delay;
-				eof_music_catalog_playback = 0;
-			}
-			else if((ret == ALOGG_POLL_NOTPLAYING) || (ret == ALOGG_POLL_FRAMECORRUPT) || (ret == ALOGG_POLL_INTERNALERROR))
-			{
-				eof_music_catalog_pos = eof_song->catalog->entry[eof_selected_catalog_entry].start_pos + eof_av_delay;
-				eof_music_catalog_playback = 0;
-			}
-			else
-			{
-				int ap = alogg_get_pos_msecs_ogg(eof_music_track);
-				if((ap > eof_music_catalog_pos) || !eof_music_catalog_playback)
-				{
-					eof_music_catalog_pos = ap;
-				}
-			}
-		}
-		else
-		{
-			if(eof_new_idle_system)
-			{
-				/* rest to save CPU */
-				if(eof_has_focus)
-				{
-					#ifndef ALLEGRO_WINDOWS
-						Idle(eof_cpu_saver);
-					#else
-						if(eof_disable_vsync)
-						{
-							Idle(eof_cpu_saver);
-						}
-					#endif
-				}
-
-				/* make program "sleep" until it is back in focus */
-				else
-				{
-					Idle(500);
-					gametime_reset();
-				}
-			}
-			else
-			{
-				/* rest to save CPU */
-				if(eof_has_focus)
-				{
-					rest(eof_cpu_saver);
-				}
-
-				/* make program "sleep" until it is back in focus */
-				else
-				{
-					rest(500);
-					gametime_reset();
-				}
-			}
-		}
-	}
+			eof_quit = 0;
+			eof_menu_file_exit();
+		} 
+		eof_quit_mustask = eof_quit;	
+	} while(!eof_quit_mustask);
 	eof_exit();
 	return 0;
 }
