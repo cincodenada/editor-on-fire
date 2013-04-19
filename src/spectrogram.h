@@ -49,7 +49,7 @@ void eof_render_spectrogram_line(struct spectrogramstruct *spectrogram,struct sp
 void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spectrogramchanneldata *channel,struct spectrogramslice *ampdata, unsigned long x, unsigned long curms);
 int eof_color_scale(double value, double max, short int scalenum);
 
-struct spectrogramstruct *eof_create_spectrogram(char *oggfilename,unsigned long windowlength);
+struct spectrogramstruct *eof_create_spectrogram(char *oggfilename);
 	//Decompresses the specified OGG file into memory and creates spectrogram data
 	//windowlength is the length of one spectrogram graph slice in milliseconds
 	//The correct number of samples are used to represent each column (slice) of the graph
