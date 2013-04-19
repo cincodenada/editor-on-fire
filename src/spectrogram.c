@@ -163,31 +163,14 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
     unsigned long cursamp;
     unsigned long nextsamp;
     double logheight;
-    double dbdown;
     double maxval;
-    double maxdb;
 
     actualzero = channel->yaxis + channel->height/2;
     curslice = curms / spectrogram->windowlength;
 
-    /*
-    if((x-startpixel) < (eof_spectrogram_windowsize/2 - 1)) {
-        scalefactor = channel->height/15;
-        avg = log(ampdata[curslice].amplist[x-startpixel]);
-        nextavg = log(ampdata[curslice].amplist[x-startpixel+1]);
-        //printf("%f\n",avg);
-        line(eof_window_editor->screen, x*2, actualzero - (avg*scalefactor), x*2+2, actualzero-(nextavg*scalefactor),makecol(255,255,255));
-        printf("%d of %ld: %f\n",x-startpixel,eof_spectrogram_windowsize/2-1,avg);
-        //putpixel(eof_window_editor->screen, x, channel->yaxis - (avg*scalefactor), makecol(255,255,255));
-    }
-
-    return;
-    */
-
     sampinterval=(double)eof_spectrogram_windowsize/2.0;
     maxval = eof_spectrogram_windowsize * spectrogram->zeroamp;
 
-    //printf("%f,%f\n",scalefactor,sampinterval);
 	if(spectrogram != NULL)
 	{
         logheight = log(channel->height); 
@@ -210,12 +193,7 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
                 avg += ampdata[curslice].amplist[sampoffset];
             }
             avg = avg/(double)(nextsamp - cursamp);
-            /*
-            if(gray > 0) {
-                printf("%ldms, slice %ld, sample %ld:",curms,curslice,cursamp);
-                printf("%f*%f = %ld\n",ampdata[curslice].amplist[cursamp],scalefactor,gray);
-            }
-            */
+
             putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(log(avg),log(maxval),eof_spectrogram_colorscheme));
             //To test a color scale
             //putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(yoffset,channel->height,eof_spectrogram_colorscheme));
@@ -225,7 +203,7 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 
 int eof_color_scale(double value, double max, short int scalenum) {
     int cnt;
-    int rgb[3];
+    int rgb[3] = {0,0,0};
     int scaledval;
     value = value/max;
     if(value < 0.0) { value = 0.0; }
@@ -369,10 +347,8 @@ struct spectrogramstruct *eof_create_spectrogram(char *oggfilename)
 			}
 			else
 			{
-                printf("Trying to divide %ld by %d...",eof_spectrogram_windowsize,audio->freq);
                 spectrogram->windowlength = (float)eof_spectrogram_windowsize / (float)audio->freq * 1000.0;
 
-                printf("Trying to divide %ld by %d times %f...",audio->len,audio->freq,spectrogram->windowlength);
 				spectrogram->numslices=(float)audio->len / ((float)audio->freq * spectrogram->windowlength / 1000.0);	//Find the number of slices to process
 				if(audio->len % spectrogram->numslices)		//If there's any remainder
 					spectrogram->numslices++;					//Increment the number of slices
@@ -401,7 +377,6 @@ struct spectrogramstruct *eof_create_spectrogram(char *oggfilename)
 		}
 	}
 
-    printf("\tGenerating plan, slice size %ld, num slices %ld\n",eof_spectrogram_windowsize,spectrogram->numslices);
     //Allocate memory for the buffer pointers
     spectrogram->buffin=(double *) fftw_malloc(sizeof(double) * eof_spectrogram_windowsize*spectrogram->numbuff);
     spectrogram->buffout=(double *) fftw_malloc(sizeof(double) * eof_spectrogram_windowsize*spectrogram->numbuff);
@@ -434,7 +409,6 @@ struct spectrogramstruct *eof_create_spectrogram(char *oggfilename)
 		#endif
 		return NULL;	//Return error
 	}
-    printf("Max: %g\n",spectrogram->destmax);
 
 	eof_log("\tSpectrogram generated", 1);
 
@@ -449,7 +423,6 @@ int eof_process_next_spectrogram_slice(struct spectrogramstruct *spectrogram,SAM
 	unsigned long cursamp=0;
     unsigned long halfsize;
     long sample=0;
-	char firstread;		//Set to nonzero after the first sample is read into the min/max variables
 	char channel=0;
 	struct spectrogramslice *dest;	//The structure to write this slice's data to
 	char outofsamples=0;		//Will be set to 1 if all samples in the audio structure have been processed
@@ -477,7 +450,6 @@ int eof_process_next_spectrogram_slice(struct spectrogramstruct *spectrogram,SAM
 	for(channel=0;channel<=spectrogram->is_stereo;channel++)	//Process loop once for mono track, twice for stereo track
 	{
 //Initialize processing for this audio channel
-		firstread=0;
 		startsample=slicenum * eof_spectrogram_windowsize; //This is the sample index for this slices starting sample
 		sampleindex=startsample * samplesize;		//This is the byte index for this slice's starting sample number
 
@@ -523,15 +495,6 @@ int eof_process_next_spectrogram_slice(struct spectrogramstruct *spectrogram,SAM
                 spectrogram->buffout[eof_spectrogram_windowsize - cursamp]
             );
             if(dest->amplist[cursamp] > spectrogram->destmax) { spectrogram->destmax = dest->amplist[cursamp]; }
-            /*
-            if(slicenum == (int)(16000/spectrogram->windowlength)) {
-                printf("log(|%e+%ei|) = %e\n",
-                    fabs(spectrogram->buffout[cursamp]),
-                    fabs(spectrogram->buffout[eof_spectrogram_windowsize-cursamp]),
-                    dest->amplist[cursamp]
-                );
-            }
-            */
         }
         dest->amplist[halfsize] = spectrogram->buffout[halfsize];
 	}
