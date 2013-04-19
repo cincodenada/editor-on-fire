@@ -209,7 +209,7 @@ MENU eof_song_menu[] =
     {"Display semitones as flat", eof_display_flats_menu, NULL, 0, NULL},
     {"Create image sequence", eof_create_image_sequence, NULL, 0, NULL},
     {"&Waveform Graph", NULL, eof_waveform_menu, 0, NULL},
-    {"&Spectrogram", NULL, eof_spectrogram_menu, 0, NULL},
+    {"Spectrogra&m", NULL, eof_spectrogram_menu, 0, NULL},
     {"", NULL, NULL, 0, NULL},
     {"&Catalog", NULL, eof_catalog_menu, 0, NULL},
     {"&INI Settings", eof_menu_song_ini_settings, NULL, 0, NULL},
@@ -1665,12 +1665,12 @@ int eof_menu_song_spectrogram(void)
         {	//Don't try to generate the spectrogram data if the chart is playing
             if(eof_spectrogram == NULL)
             {
-                eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name,1);	//Generate 1ms spectrogram data from the current audio file
+                eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name);	//Generate 1ms spectrogram data from the current audio file
             }
             else if(ustricmp(eof_spectrogram->oggfilename,eof_loaded_ogg_name) != 0)
             {	//If the user opened a different OGG file since the spectrogram data was generated
                 eof_destroy_spectrogram(eof_spectrogram);
-                eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name,1);	//Generate 1ms spectrogram data from the current audio file
+                eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name);	//Generate 1ms spectrogram data from the current audio file
             }
         }
 
@@ -2221,7 +2221,7 @@ int eof_menu_song_spectrogram_settings(void)
 
         //Reload the spectrogram if we changed the window size
         if(eof_spectrogram_windowsize != first_windowsize && eof_spectrogram != NULL) {
-            eof_create_spectrogram(eof_spectrogram->oggfilename,NULL);
+            eof_create_spectrogram(eof_spectrogram->oggfilename);
         }
 
         //Run through the color options

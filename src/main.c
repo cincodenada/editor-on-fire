@@ -1593,7 +1593,7 @@ void eof_fix_spectrogram_graph(void)
     if(eof_music_paused && eof_spectrogram)
     {
         eof_destroy_spectrogram(eof_spectrogram);
-        eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name,1);	//Generate 1ms spectrogram data from the current audio file
+        eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name);	//Generate 1ms spectrogram data from the current audio file
         if(eof_spectrogram)
         {
             eof_spectrogram_menu[0].flags = D_SELECTED;	//Check the Show item in the Song>Waveform graph menu
