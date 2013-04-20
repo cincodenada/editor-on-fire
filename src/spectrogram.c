@@ -17,6 +17,10 @@ char eof_spectrogram_renderrightchannel = 0;		//Specifies whether the right chan
 char eof_spectrogram_colorscheme = 1;				//Specifies the color scheme to use for the graph
 int eof_spectrogram_windowsize = 1024;				//Specifies the window size to use
 double eof_half_spectrogram_windowsize = 512.0;
+double eof_spectrogram_startfreq = DEFAULT_STARTFREQ;
+double eof_spectrogram_endfreq = DEFAULT_ENDFREQ;
+double eof_spectrogram_userange = 0;
+double eof_spectrogram_logplot = 1;
 
 void eof_destroy_spectrogram(struct spectrogramstruct *ptr)
 {
@@ -47,6 +51,8 @@ void eof_destroy_spectrogram(struct spectrogramstruct *ptr)
 			free(ptr->right.slices);
 		}
 		free(ptr);
+        if(ptr->px_to_freq)
+            free(ptr->px_to_freq);
 	}
 }
 
@@ -155,6 +161,9 @@ int eof_render_spectrogram(struct spectrogramstruct *spectrogram)
 		return 1;
 	}
 
+    //Calculate the axis bins - second param toggles log plot
+    eof_spectrogram_calculate_px_to_freq(spectrogram, height);
+
 //render graph from left to right, one pixel at a time (each pixel represents eof_zoom number of milliseconds of audio)
 	//for(x=startpixel;x < eof_window_editor->w;x++)
 	for(x=startpixel;x < eof_window_editor->w;x++,curms+=eof_zoom)
@@ -173,6 +182,47 @@ int eof_render_spectrogram(struct spectrogramstruct *spectrogram)
 	return 0;
 }
 
+void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram, int height)
+{
+	//TODO: Use spectrogram->left/right.height and standardize tabs
+    if(height == spectrogram->prevheight)
+    {
+        eof_log("Using old px_to_freq table",1);
+        return;
+    }
+    else
+    {
+        spectrogram->prevheight = height;
+    }
+    eof_log("Recreating px_to_freq table",1);
+
+    free(spectrogram->px_to_freq);
+    spectrogram->px_to_freq = (unsigned long *)malloc((height+1) * sizeof(unsigned long));
+
+    double startfreq = DEFAULT_STARTFREQ;
+    double endfreq = DEFAULT_ENDFREQ;
+    double binsize=((double)spectrogram->rate/2.0)/(double)eof_spectrogram_windowsize;
+
+    if(eof_spectrogram_userange)
+    { //Assign custom start/end if we're using it
+        startfreq = eof_spectrogram_startfreq;
+        endfreq = eof_spectrogram_endfreq;
+    }
+
+    double a = eof_y_from_freq(spectrogram->rate, startfreq);
+    double b = eof_y_from_freq(spectrogram->rate, endfreq);
+    double yfrac = (b-a)/height;
+
+    //Internal loop vars
+    int y;
+    double freq;
+    for(y=0;y < height;y++)
+    {
+        freq = eof_freq_from_y(spectrogram->rate, a + (double)y*yfrac);
+        spectrogram->px_to_freq[y] = (unsigned long)ceil(freq/binsize);
+    }
+}
+
 void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spectrogramchanneldata *channel,struct spectrogramslice *ampdata, unsigned long x, unsigned long curms)
 {
 	unsigned long yoffset;	//The offset from the y axis coordinate to render the line to
@@ -180,8 +230,6 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 	unsigned long actualzero;
 	unsigned long sampoffset;
 	double avg;
-	double curpoint;
-	double nextpoint;
 	unsigned long cursamp;
 	unsigned long nextsamp;
 
@@ -191,10 +239,9 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 		curslice = curms / spectrogram->windowlength;
 		for(yoffset=0;yoffset < channel->height-1;yoffset++)
 		{
-			curpoint = 1.0 - log(channel->height-yoffset)/channel->logheight;
-			nextpoint = 1.0 - log(channel->height-yoffset-1)/channel->logheight;
-			cursamp = (unsigned long)(eof_half_spectrogram_windowsize * curpoint);
-			nextsamp = (unsigned long)(eof_half_spectrogram_windowsize * nextpoint);
+            //Find the bins for these frequencies
+            cursamp = spectrogram->px_to_freq[yoffset];
+            nextsamp = spectrogram->px_to_freq[yoffset+1];
 			if(cursamp == nextsamp)
 			{
 				nextsamp = cursamp + 1;
@@ -213,6 +260,30 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 			//putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(yoffset,channel->height,eof_spectrogram_colorscheme));
 		}
 	}
+}
+
+double eof_freq_from_y(long rate, double y) 
+{
+    if(eof_spectrogram_logplot)
+    {
+        return MINFREQ * pow(((double)rate/2.0) / MINFREQ, y);
+    }
+    else
+    {
+        return MINFREQ + y * (((double)rate/2.0) - MINFREQ);
+    }
+}
+
+double eof_y_from_freq(long rate, double freq) 
+{
+    if(eof_spectrogram_logplot) 
+    {
+        return log(freq / MINFREQ) / log(((double)rate/2.0) / MINFREQ);
+    }
+    else
+    {
+        return (freq - MINFREQ) / (((double)rate/2.0) - MINFREQ);
+    }
 }
 
 int eof_color_scale(double value, double max, short int scalenum)
@@ -377,6 +448,7 @@ struct spectrogramstruct *eof_create_spectrogram(char *oggfilename)
 			}
 			else
 			{
+                spectrogram->rate = audio->freq;
 				spectrogram->windowlength = (float)eof_spectrogram_windowsize / (float)audio->freq * 1000.0;
 
 				spectrogram->numslices=(float)audio->len / ((float)audio->freq * spectrogram->windowlength / 1000.0);	//Find the number of slices to process

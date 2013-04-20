@@ -2,6 +2,10 @@
 #define EOF_SPECTROGRAM_H
 #include <fftw3.h>
 
+#define DEFAULT_STARTFREQ 27.5
+#define DEFAULT_ENDFREQ 4186
+#define MINFREQ 27.5
+
 struct spectrogramslice
 {
     double *amplist;             //The list of absolute amplitudes for each frequency band
@@ -29,6 +33,11 @@ struct spectrogramstruct
 	char is_stereo;						//This OGG has two audio channels
 	double destmax;
 	double log_max;						//Will store the logarithm of the product of the window size and the the spectrogram's zeroamp value
+	long rate;
+
+	unsigned long *px_to_freq;
+	int prevheight;
+	char prevlog;
 
 	struct spectrogramchanneldata left;	//The amplitude and graph data for the audio's left channel
 	struct spectrogramchanneldata right;	//The amplitude and graph data for the audio's right channel (if applicable)
@@ -42,6 +51,15 @@ extern char eof_spectrogram_renderrightchannel;		//Specifies whether the right c
 extern char eof_spectrogram_colorscheme;
 extern int eof_spectrogram_windowsize;
 extern double eof_half_spectrogram_windowsize;		//Caches the value of eof_spectrogram_windowsize / 2
+extern double eof_spectrogram_startfreq;
+extern double eof_spectrogram_endfreq;
+extern double eof_spectrogram_userange;
+extern double eof_spectrogram_logplot;
+
+//Axis helper functions
+double eof_y_from_freq(long rate, double freq);
+double eof_freq_from_y(long rate, double y); 
+void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram, int height);
 
 void eof_destroy_spectrogram(struct spectrogramstruct *ptr);
 	//frees memory used by the specified spectrogram structure
