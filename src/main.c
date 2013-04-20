@@ -1586,9 +1586,9 @@ void eof_fix_waveform_graph(void)
 	}
 }
 
-void eof_fix_spectrogram_graph(void)
+void eof_fix_spectrogram(void)
 {
-    eof_log("eof_fix_spectrogram_graph() entered", 1);
+    eof_log("eof_fix_spectrogram() entered", 1);
 
     if(eof_music_paused && eof_spectrogram)
     {
