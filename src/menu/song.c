@@ -2153,7 +2153,7 @@ int eof_menu_song_spectrogram_settings(void)
 		}
 		eof_half_spectrogram_windowsize = (double)eof_spectrogram_windowsize / 2.0;	//Cache this value so it isn't calculated for every rendered column of the spectrogram
 
-		//Reload the spectrogram if we changed the window size
+		//Recreate the spectrogram if we changed the window size
 		if((eof_spectrogram_windowsize != prev_windowsize) && (eof_spectrogram != NULL))
 		{
 			eof_destroy_spectrogram(eof_spectrogram);
@@ -2180,7 +2180,7 @@ int eof_menu_song_spectrogram_settings(void)
 		if(eof_spectrogram_endfreq != newfreq) { is_dirty = 1; }
 		eof_spectrogram_endfreq = newfreq;
 
-
+		//Set the various checkboxes
 		char prevchk;
 
 		prevchk	= eof_spectrogram_userange;
@@ -2193,8 +2193,10 @@ int eof_menu_song_spectrogram_settings(void)
 		eof_spectrogram_logplot = (eof_spectrogram_settings_dialog[22].flags == D_SELECTED);
 		if(eof_spectrogram_logplot != prevchk) { is_dirty = 1; }
 
+		//Check if the various things that require a re-gen of the
+		//px_to_freq table, and if so set the dirty flag
 		if(is_dirty && (eof_spectrogram != NULL))
-		{ //Mark px_to_freq as dirty
+		{
 			eof_spectrogram->px_to_freq.dirty = 1;
 		}
 	}

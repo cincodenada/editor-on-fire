@@ -10,19 +10,19 @@
 #endif
 
 struct spectrogramstruct *eof_spectrogram = NULL;	//Stores the spectrogram data
-struct spectrogramcolorscalestruct *eof_spectrogram_colorscale=NULL;	//Stores the spectrogram data
+struct spectrogramcolorscalestruct *eof_spectrogram_colorscale=NULL;	//Stores the current colorscale being used
 char eof_display_spectrogram = 0;					//Specifies whether the spectrogram display is enabled
 char eof_spectrogram_renderlocation = 0;			//Specifies where and how high the graph will render (0 = fretboard area, 1 = editor window)
 char eof_spectrogram_renderleftchannel = 1;			//Specifies whether the left channel's graph should render
 char eof_spectrogram_renderrightchannel = 0;		//Specifies whether the right channel's graph should render
-char eof_spectrogram_colorscheme = 1;				//Specifies the color scheme to use for the graph
-int eof_spectrogram_windowsize = 1024;				//Specifies the window size to use
-double eof_half_spectrogram_windowsize = 512.0;
-double eof_spectrogram_startfreq = DEFAULT_STARTFREQ;
-double eof_spectrogram_endfreq = DEFAULT_ENDFREQ;
-double eof_spectrogram_userange = 0;
-double eof_spectrogram_logplot = 1;
-double eof_spectrogram_avgbins = 0;
+char eof_spectrogram_colorscheme = 1;				//Specifies the index of the colorscale being used
+int eof_spectrogram_windowsize = 1024;				//Specifies the window size for the spectrogram
+double eof_half_spectrogram_windowsize = 512.0;     //Caches the value of eof_spectrogram_windowsize / 2
+double eof_spectrogram_startfreq = DEFAULT_STARTFREQ;   //For displaying a subset of the frequency range, the lower frequency
+double eof_spectrogram_endfreq = DEFAULT_ENDFREQ;       //For displaying a subset of the frequency range, the higher frequency
+double eof_spectrogram_userange = 0;                //Specifies whether to display the selected subset
+double eof_spectrogram_logplot = 1;                 //Specifies whether to graph the y-axis on a log scale
+double eof_spectrogram_avgbins = 0;                 //Specifies whether to average the bins within a pixel
 
 void eof_destroy_spectrogram(struct spectrogramstruct *ptr)
 {
@@ -184,6 +184,18 @@ int eof_render_spectrogram(struct spectrogramstruct *spectrogram)
 	return 0;
 }
 
+/**
+ * Pre-calculate a table that maps pixels on the y-axis to frequency bins
+ *
+ * This function populates the px_to_freq table in the spectrogram that is
+ * used to avoid converting pixels to frequencies repeatedly, which is costly
+ * especially in the case of log plots.
+ *
+ * This function checks itself if the table needs to be recalculated and simply
+ * returns if the old version is usable, so it can be called on each render
+ *
+ * @param spectrogram The spectrogramstruct of the given spectrogram
+ */
 void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram)
 {
 	int height = 0;
@@ -208,7 +220,7 @@ void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram)
 
 	if(spectrogram->px_to_freq.dirty == 0)
 	{
-		eof_log("Using existing px_to_freq table",1);
+		//eof_log("Using existing px_to_freq table",1);
 		return;
 	}
 
@@ -234,8 +246,8 @@ void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram)
 		endfreq = eof_spectrogram_endfreq;
 	}
 
-	double a = eof_y_from_freq(spectrogram->rate, startfreq);
-	double b = eof_y_from_freq(spectrogram->rate, endfreq);
+	double a = eof_spectrogram_y_from_freq(spectrogram->rate, startfreq);
+	double b = eof_spectrogram_y_from_freq(spectrogram->rate, endfreq);
 	double yfrac = (b-a)/height;
 
 	//Internal loop vars
@@ -243,12 +255,23 @@ void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram)
 	double freq;
 	for(y=0;y <= height;y++)
 	{
-		freq = eof_freq_from_y(spectrogram->rate, a + (double)y*yfrac);
+		freq = eof_spectrogram_freq_from_y(spectrogram->rate, a + (double)y*yfrac);
 		spectrogram->px_to_freq.map[y] = (unsigned long)ceil(freq/binsize);
 	}
 }
 
-unsigned long spectrogram_get_freq_from_px(struct spectrogramstruct *spectrogram, int px) {
+/**
+ * A safe accessor for the px_to_freq table 
+ *
+ * Ensures the given pixel value is in the range of available values
+ * and that the px_to_freq map is populated properly
+ *
+ * @param spectrogram The spectrogram data structure
+ * @param px The pixel value to be looked up
+ * @return The frequency bin represented by that pixel
+ */
+unsigned long spectrogram_get_freq_from_px(struct spectrogramstruct *spectrogram, int px)
+{
 	if(spectrogram->px_to_freq.map == NULL)
 	{
 		return 0;
@@ -266,7 +289,16 @@ unsigned long spectrogram_get_freq_from_px(struct spectrogramstruct *spectrogram
 	}
 }
 
-double eof_freq_from_y(long rate, double y) 
+/**
+ * Helper function to calculate the frequency given a percentage of the y axis
+ *
+ * Checks for log scale or not and calculates accordingly
+ *
+ * @param rate The sampling rate of the audio, which determines the max
+ * @param y A value from 0 to 1 representing the position on the y axis
+ * @return The frequency at that position
+ */
+double eof_spectrogram_freq_from_y(long rate, double y) 
 {
 	if(eof_spectrogram_logplot)
 	{
@@ -278,7 +310,16 @@ double eof_freq_from_y(long rate, double y)
 	}
 }
 
-double eof_y_from_freq(long rate, double freq) 
+/**
+ * Helper function to calculate the y position for a given frequency
+ *
+ * Checks for log scale or not and calculates accordingly
+ *
+ * @param rate The sampling rate of the audio, which determines the max
+ * @param freq The frequency being plotted
+ * @return The position on the y axis, from 0 to 1, of that frequency
+ */
+double eof_spectrogram_y_from_freq(long rate, double freq) 
 {
 	if(eof_spectrogram_logplot) 
 	{
@@ -336,6 +377,14 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 	}
 }
 
+/**
+ * Returns a color for a given value on a scale
+ *
+ * @param value The value (from 0 to @max) to be represented 
+ * @param max The maximum value on the scale
+ * @param scalenum The index of the scale being used
+ * @return An integer representing a RGB color
+ */
 int eof_color_scale(double value, double max, short int scalenum)
 {
 	eof_generate_colorscale(scalenum);
@@ -360,6 +409,15 @@ int eof_color_scale(double value, double max, short int scalenum)
 	}
 }
 
+/**
+ * Generates the given colorscale
+ * 
+ * This function is where algorithms for the various colorscales are defined
+ * It simply has a switch statement with a block for each scale 
+ * That creates a given colorscale in the colorscale datastructure
+ *
+ * @param scalenum The index number of the scale to generate
+ */
 void eof_generate_colorscale(char scalenum) 
 {
 	if((eof_spectrogram_colorscale != NULL) && (eof_spectrogram_colorscale->scalenum == scalenum))
@@ -379,6 +437,8 @@ void eof_generate_colorscale(char scalenum)
 	
 	if(eof_spectrogram_colorscale != NULL)
 	{
+		//Initialize the maximum value of the colorscale
+		//Determined by the number of values available
 		eof_spectrogram_colorscale->scalenum = scalenum;
 		switch(scalenum) 
 		{
@@ -392,16 +452,22 @@ void eof_generate_colorscale(char scalenum)
 
 		eof_spectrogram_colorscale->colortable = (int *)malloc((eof_spectrogram_colorscale->maxval+1) * sizeof(int));
 
+		//Generate the color values
 		int rgb[3] = {0,0,0};
 		int cnt, scaledval;
 		for(scaledval = 0; scaledval <= eof_spectrogram_colorscale->maxval; scaledval++)
-		{
-			switch(scalenum) 
+		{ //Loop through, calculating a color for each point on the scale
+			switch(scalenum)
 			{
 				case 0:
-					for(cnt=0;cnt<3;cnt++) { rgb[cnt] = scaledval; }
+					//Grayscale, just R=G=B=value
+					for(cnt=0;cnt<3;cnt++)
+					{
+						rgb[cnt] = scaledval;
+					}
 				break;
 				case 1:
+					//More complex heatmap, rainbow (red->orange->green->blue)
 					rgb[0] = 384.0 - abs(scaledval-896.0);
 					rgb[1] = 384.0 - abs(scaledval-640.0);
 					rgb[2] = 384.0 - abs(scaledval-384.0);
