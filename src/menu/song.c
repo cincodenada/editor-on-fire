@@ -2094,8 +2094,8 @@ int eof_menu_song_spectrogram_settings(void)
 	eof_spectrogram_settings_dialog[16 + eof_spectrogram_colorscheme].flags = D_SELECTED;
 	
 	//Set up the note range
-	strcpy(eof_etext2, eof_freq_to_note(eof_spectrogram_startfreq));
-	strcpy(eof_etext3, eof_freq_to_note(eof_spectrogram_endfreq));
+	strcpy(eof_etext2, notefunc_freq_to_note(eof_spectrogram_startfreq));
+	strcpy(eof_etext3, notefunc_freq_to_note(eof_spectrogram_endfreq));
 	if(eof_spectrogram_userange) 
 		eof_spectrogram_settings_dialog[22].flags = D_SELECTED;
 
@@ -2103,8 +2103,8 @@ int eof_menu_song_spectrogram_settings(void)
 		eof_spectrogram_settings_dialog[23].flags = D_SELECTED;
 
 	char needs_refit = 0;
-	if(eof_popup_dialog(eof_spectrogram_settings_dialog, 0) == 24)		//User clicked OK
-	{
+	if(eof_popup_dialog(eof_spectrogram_settings_dialog, 0) == 24)
+	{ //User clicked OK
 		if(eof_spectrogram_settings_dialog[2].flags == D_SELECTED)
 		{	//User selected to render into fretboard area
 			if(eof_spectrogram_renderlocation == 1) { needs_refit = 1; }
@@ -2135,8 +2135,8 @@ int eof_menu_song_spectrogram_settings(void)
 			if(eof_spectrogram_renderrightchannel == 1) { needs_refit = 1; }
 			eof_spectrogram_renderrightchannel = 0;
 		}
-		prev_windowsize = eof_spectrogram_windowsize;
 
+		prev_windowsize = eof_spectrogram_windowsize;
 		//Run through the window sizes
 		for(i=8;i<13;i++)
 		{
@@ -2157,7 +2157,7 @@ int eof_menu_song_spectrogram_settings(void)
 		eof_half_spectrogram_windowsize = (double)eof_spectrogram_windowsize / 2.0;	//Cache this value so it isn't calculated for every rendered column of the spectrogram
 
 		//Reload the spectrogram if we changed the window size
-		if(eof_spectrogram_windowsize != first_windowsize && eof_spectrogram != NULL) {
+		if((eof_spectrogram_windowsize != prev_windowsize) && (eof_spectrogram != NULL))
 		{
 			eof_destroy_spectrogram(eof_spectrogram);
 			eof_spectrogram = eof_create_spectrogram(eof_loaded_ogg_name);
@@ -2175,14 +2175,13 @@ int eof_menu_song_spectrogram_settings(void)
 		//Parse the note names
 		double newfreq;
 
-		newfreq = eof_note_to_freq(eof_etext2);
+		newfreq = notefunc_note_to_freq(eof_etext2);
 		if(eof_spectrogram_startfreq != newfreq) { needs_refit = 1; }
 		eof_spectrogram_startfreq = newfreq;
 
-		newfreq = eof_note_to_freq(eof_etext3);
+		newfreq = notefunc_note_to_freq(eof_etext3);
 		if(eof_spectrogram_endfreq != newfreq) { needs_refit = 1; }
 		eof_spectrogram_endfreq = newfreq;
-
 
 		char prevchk;
 
@@ -2195,7 +2194,7 @@ int eof_menu_song_spectrogram_settings(void)
 		if(eof_spectrogram_logplot != prevchk) { needs_refit = 1; }
 
 
-		if(needs_refit) 
+		if(needs_refit && (eof_spectrogram != NULL))
 		{ //Clear prevheight to force regen
 			eof_spectrogram->prevheight = 0;
 		}
