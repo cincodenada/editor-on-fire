@@ -689,7 +689,7 @@ int eof_process_next_spectrogram_slice(struct spectrogramstruct *spectrogram,SAM
 		}
 		halfsize = eof_spectrogram_windowsize / 2;
 		dest->amplist=(double*)malloc(sizeof(double) * (halfsize + 1));
-		dest->amplist[0] = spectrogram->buffout[0];    //The first one is all real
+		dest->amplist[0] = spectrogram->buffout[0];			//The first one is all real
 		for(cursamp=halfsize - 1; cursamp > 0; cursamp--)
 		{
 			dest->amplist[cursamp] = sqrt(

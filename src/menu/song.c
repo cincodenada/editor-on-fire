@@ -2003,33 +2003,34 @@ int eof_menu_song_waveform_settings(void)
 int eof_spectrogram_settings_wsize[] = {32,128,512,1024,2048};
 DIALOG eof_spectrogram_settings_dialog[] =
 {
-	/* (proc)             (x)  (y)  (w)  (h)  (fg) (bg) (key) (flags) (d1)  (d2) (dp)                     (dp2) (dp3) */
-	{ d_agup_window_proc,  	0,	48,	250,290,2,   23,  0,    0,      0,	0,	"Configure Spectrogram",	NULL, NULL },
-	{ d_agup_text_proc,   16,  80,  64,  8,   2,   23,  0,    0,      0,    0,   "Fit into:",             NULL, NULL },
-	{ d_agup_radio_proc,  16,  100, 110, 15,  2,   23,  0,    0,      0,    0,   "Fretboard area",        NULL, NULL },
-	{ d_agup_radio_proc,  16,  120, 110, 15,  2,   23,  0,    0,      0,    0,   "Editor window",         NULL, NULL },
-	{ d_agup_text_proc,   16,  140, 80,  16,  2,   23,  0,    0,      1,    0,   "Display channels:",     NULL, NULL },
-	{ d_agup_check_proc,  16,  160, 45,  16,  2,   23,  0,    0,      1,    0,   "Left",                  NULL, NULL },
-	{ d_agup_check_proc,  16,  180, 55,  16,  2,   23,  0,    0,      1,    0,   "Right",                 NULL, NULL },
-	{ d_agup_text_proc,		136, 80,64,	8,	2,   23,  0,    0,      0,	0,	"Window size:",				NULL, NULL },
-	{ d_agup_radio_proc,		136,100,45,15,	2,   23,  0,    0,      1,	0,	"32",           			NULL, NULL },
-	{ d_agup_radio_proc,		136,120,45,15,	2,   23,  0,    0,      1,	0,	"128",           			NULL, NULL },
-	{ d_agup_radio_proc,		136,140,45,15,	2,   23,  0,    0,      1,	0,	"512",           			NULL, NULL },
-	{ d_agup_radio_proc,		136,160,45,15,	2,   23,  0,    0,      1,	0,	"1024",           			NULL, NULL },
-	{ d_agup_radio_proc,		136,180,45,15,	2,   23,  0,    0,      1,	0,	"2048",           			NULL, NULL },
-	{ d_agup_radio_proc,		136,200,59,15,	2,   23,  0,    0,      1,	0,	"Other",           			NULL, NULL },
-	{ d_agup_edit_proc,      195,197,50,20,  0,   0,   0,    0,      255,0, eof_etext,					NULL, NULL },
-	{ d_agup_text_proc,		16,	205,64,	8,	2,   23,  0,    0,      0,	0,	"Color scheme:",			NULL, NULL },
-	{ d_agup_radio_proc,		16,	225,100,15,	2,   23,  0,    0,      2,	0,	"Grayscale",           		NULL, NULL },
-	{ d_agup_radio_proc,		16,	245,100,15,	2,   23,  0,    0,      2,	0,	"Color",           			NULL, NULL },
-	{ d_agup_text_proc,		136,225,64,	8,	2,   23,  0,    0,      0,	0,	"Note range:",				NULL, NULL },
-	{ d_agup_edit_proc,		136,245,40,	15,	2,   23,  0,    0,      3,	0,	eof_etext2,					NULL, NULL },
-	{ d_agup_text_proc,		180,250,15,	8,	2,   23,  0,    0,      0,	0,	"to",						NULL, NULL },
-	{ d_agup_edit_proc,		196,245,40,	15,	2,   23,  0,    0,      3,	0,	eof_etext3,					NULL, NULL },
-	{ d_agup_check_proc,		136,270,45, 16,	2,   23,  0,    0,		1,	0,	"Enable",					NULL, NULL },
-	{ d_agup_check_proc,	16, 270,45, 16,	2,   23,  0,    0,		1,	0,	"Log plot",					NULL, NULL },
-	{ d_agup_button_proc,	16,	298,68,	28,	2,   23,  '\r',	D_EXIT, 0,	0,	"OK",             			NULL, NULL },
-	{ d_agup_button_proc,	116,298,68,	28,	2,   23,  0,	D_EXIT, 0,	0,	"Cancel",         			NULL, NULL },
+	/* (proc)				(x)	(y)		(w)	(h)		(fg)(bg)(key)	(flags)	(d1)(d2)(dp)						(dp2)(dp3) */
+	{ d_agup_window_proc,	0,	48,		250,290,	2,	23,	0,		0,		0,	0,	"Configure Spectrogram",	NULL,NULL },
+	{ d_agup_text_proc,		16,	80,		64,	8,		2,	23,	0,		0,		0,	0,	"Fit into:",				NULL,NULL },
+	{ d_agup_radio_proc,	16,	100,	110,15,		2,	23,	0,		0,		0,	0,	"Fretboard area",			NULL,NULL },
+	{ d_agup_radio_proc,	16,	120,	110,15,		2,	23,	0,		0,		0,	0,	"Editor window",			NULL,NULL },
+	{ d_agup_text_proc,		16,	140,	80,	16,		2,	23,	0,		0,		1,	0,	"Display channels:",		NULL,NULL },
+	{ d_agup_check_proc,	16,	160,	45,	16,		2,	23,	0,		0,		1,	0,	"Left",						NULL,NULL },
+	{ d_agup_check_proc,	16,	180,	55,	16,		2,	23,	0,		0,		1,	0,	"Right",					NULL,NULL },
+	{ d_agup_text_proc,		136,80,		64,	8,		2,	23,	0,		0,		0,	0,	"Window size:",				NULL,NULL },
+	{ d_agup_radio_proc,	136,100,	45,	15,		2,	23,	0,		0,		1,	0,	"32",						NULL,NULL },
+	{ d_agup_radio_proc,	136,120,	45,	15,		2,	23,	0,		0,		1,	0,	"128",						NULL,NULL },
+	{ d_agup_radio_proc,	136,140,	45,	15,		2,	23,	0,		0,		1,	0,	"512",						NULL,NULL },
+	{ d_agup_radio_proc,	136,160,	45,	15,		2,	23,	0,		0,		1,	0,	"1024",						NULL,NULL },
+	{ d_agup_radio_proc,	136,180,	45,	15,		2,	23,	0,		0,		1,	0,	"2048",						NULL,NULL },
+	{ d_agup_radio_proc,	136,200,	59,	15,		2,	23,	0,		0,		1,	0,	"Other",					NULL,NULL },
+	{ d_agup_edit_proc,		195,197,	50,	20,		0,	0,	0,		0,		255,0,	eof_etext,					NULL,NULL },
+	{ d_agup_text_proc,		16,	205,	64,	8,		2,	23,	0,		0,		0,	0,	"Color scheme:",			NULL,NULL },
+	{ d_agup_radio_proc,	16,	225,	100,15,		2,	23,	0,		0,		2,	0,	"Grayscale",				NULL,NULL },
+	{ d_agup_radio_proc,	16,	245,	100,15,		2,	23,	0,		0,		2,	0,	"Color",					NULL,NULL },
+	{ d_agup_text_proc,		136,225,	64,	8,		2,	23,	0,		0,		0,	0,	"Note range:",				NULL,NULL },
+	{ d_agup_edit_proc,		136,245,	40,	15,		2,	23,	0,		0,		3,	0,	eof_etext2,					NULL,NULL },
+	{ d_agup_text_proc,		180,250,	15,	8,		2,	23,	0,		0,		0,	0,	"to",						NULL,NULL },
+	{ d_agup_edit_proc,		196,245,	40,	15,		2,	23,	0,		0,		3,	0,	eof_etext3,					NULL,NULL },
+	{ d_agup_check_proc,	136,270,	45,	16,		2,	23,	0,		0,		1,	0,	"Enable",					NULL,NULL },
+	{ d_agup_check_proc,	16,	270,	45,	16,		2,	23,	0,		0,		1,	0,	"Log plot",					NULL,NULL },
+
+	{ d_agup_button_proc,	16,	298,	68,	28,		2,	23,	'\r',	D_EXIT,	0,	0,	"OK",						NULL,NULL },
+	{ d_agup_button_proc,	116,298,	68,	28,		2,	23,	0,		D_EXIT,	0,	0,	"Cancel",					NULL,NULL },
 	{ NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL }
 };
 
@@ -2139,8 +2140,8 @@ int eof_menu_song_spectrogram_settings(void)
 				eof_spectrogram_windowsize = eof_spectrogram_settings_wsize[i-8];
 			}
 		}
-        //Check for the Other box
-        if(eof_spectrogram_settings_dialog[13].flags == D_SELECTED)
+		//Check for the Other box
+		if(eof_spectrogram_settings_dialog[13].flags == D_SELECTED)
 		{
 			eof_spectrogram_windowsize = atoi(eof_etext);
 			if(eof_spectrogram_windowsize == 0)

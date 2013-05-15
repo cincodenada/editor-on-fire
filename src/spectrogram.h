@@ -9,7 +9,7 @@
 
 struct spectrogramslice
 {
-    double *amplist;             //The list of absolute amplitudes for each frequency band
+	double *amplist;	 //The list of absolute amplitudes for each frequency band
 };
 
 struct spectrogramchanneldata
