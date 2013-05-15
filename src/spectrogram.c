@@ -22,6 +22,7 @@ double eof_spectrogram_startfreq = DEFAULT_STARTFREQ;
 double eof_spectrogram_endfreq = DEFAULT_ENDFREQ;
 double eof_spectrogram_userange = 0;
 double eof_spectrogram_logplot = 1;
+double eof_spectrogram_avgbins = 0;
 
 void eof_destroy_spectrogram(struct spectrogramstruct *ptr)
 {
@@ -294,12 +295,10 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 	unsigned long yoffset;	//The offset from the y axis coordinate to render the line to
 	unsigned long curslice;
 	unsigned long actualzero;
-	double avg;
+	double val;
 	unsigned long cursamp;
-#ifdef AVG_BINS
 	unsigned long nextsamp;
 	unsigned long sampoffset;
-#endif
 
 	if(spectrogram != NULL)
 	{
@@ -309,25 +308,28 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 		{
 			//Find the bins for these frequencies
 			cursamp = spectrogram_get_freq_from_px(spectrogram, yoffset);
-#ifdef AVG_BINS
-			nextsamp = spectrogram_get_freq_from_px(yoffset+1);
-			if(cursamp == nextsamp)
+			if(eof_spectrogram_avgbins)
 			{
-				nextsamp = cursamp + 1;
+				nextsamp = spectrogram_get_freq_from_px(spectrogram, yoffset+1);
+				if(cursamp == nextsamp)
+				{
+					nextsamp = cursamp + 1;
+				}
+
+				//Average the samples to get a gray value
+				val = 0.0;
+				for(sampoffset = cursamp; sampoffset < nextsamp; sampoffset++)
+				{
+					val += ampdata[curslice].amplist[sampoffset];
+				}
+				val = val/(double)(nextsamp - cursamp);
+			}
+			else
+			{
+				val = ampdata[curslice].amplist[cursamp];
 			}
 
-			//Average the samples to get a gray value
-			avg = 0.0;
-			for(sampoffset = cursamp; sampoffset < nextsamp; sampoffset++)
-			{
-				avg += ampdata[curslice].amplist[sampoffset];
-			}
-			avg = avg/(double)(nextsamp - cursamp);
-#else
-			avg = ampdata[curslice].amplist[cursamp];
-#endif
-
-			putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(log(avg),spectrogram->log_max,eof_spectrogram_colorscheme));
+			putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(log(val),spectrogram->log_max,eof_spectrogram_colorscheme));
 			//To test a color scale
 			//putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(yoffset,channel->height,eof_spectrogram_colorscheme));
 		}

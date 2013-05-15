@@ -2004,7 +2004,7 @@ int eof_spectrogram_settings_wsize[] = {32,128,512,1024,2048};
 DIALOG eof_spectrogram_settings_dialog[] =
 {
 	/* (proc)				(x)	(y)		(w)	(h)		(fg)(bg)(key)	(flags)	(d1)(d2)(dp)						(dp2)(dp3) */
-	{ d_agup_window_proc,	0,	48,		250,290,	2,	23,	0,		0,		0,	0,	"Configure Spectrogram",	NULL,NULL },
+	{ d_agup_window_proc,	0,	48,		260,290,	2,	23,	0,		0,		0,	0,	"Configure Spectrogram",	NULL,NULL },
 	{ d_agup_text_proc,		16,	80,		64,	8,		2,	23,	0,		0,		0,	0,	"Fit into:",				NULL,NULL },
 	{ d_agup_radio_proc,	16,	100,	110,15,		2,	23,	0,		0,		0,	0,	"Fretboard area",			NULL,NULL },
 	{ d_agup_radio_proc,	16,	120,	110,15,		2,	23,	0,		0,		0,	0,	"Editor window",			NULL,NULL },
@@ -2012,22 +2012,21 @@ DIALOG eof_spectrogram_settings_dialog[] =
 	{ d_agup_check_proc,	16,	160,	45,	16,		2,	23,	0,		0,		1,	0,	"Left",						NULL,NULL },
 	{ d_agup_check_proc,	16,	180,	55,	16,		2,	23,	0,		0,		1,	0,	"Right",					NULL,NULL },
 	{ d_agup_text_proc,		136,80,		64,	8,		2,	23,	0,		0,		0,	0,	"Window size:",				NULL,NULL },
-	{ d_agup_radio_proc,	136,100,	45,	15,		2,	23,	0,		0,		1,	0,	"32",						NULL,NULL },
-	{ d_agup_radio_proc,	136,120,	45,	15,		2,	23,	0,		0,		1,	0,	"128",						NULL,NULL },
-	{ d_agup_radio_proc,	136,140,	45,	15,		2,	23,	0,		0,		1,	0,	"512",						NULL,NULL },
-	{ d_agup_radio_proc,	136,160,	45,	15,		2,	23,	0,		0,		1,	0,	"1024",						NULL,NULL },
-	{ d_agup_radio_proc,	136,180,	45,	15,		2,	23,	0,		0,		1,	0,	"2048",						NULL,NULL },
-	{ d_agup_radio_proc,	136,200,	59,	15,		2,	23,	0,		0,		1,	0,	"Other",					NULL,NULL },
-	{ d_agup_edit_proc,		195,197,	50,	20,		0,	0,	0,		0,		255,0,	eof_etext,					NULL,NULL },
-	{ d_agup_text_proc,		16,	205,	64,	8,		2,	23,	0,		0,		0,	0,	"Color scheme:",			NULL,NULL },
+	{ d_agup_radio_proc,	136,100,	45,	15,		2,	23,	0,		0,		1,	0,	"128",						NULL,NULL },
+	{ d_agup_radio_proc,	136,120,	45,	15,		2,	23,	0,		0,		1,	0,	"512",						NULL,NULL },
+	{ d_agup_radio_proc,	136,140,	45,	15,		2,	23,	0,		0,		1,	0,	"1024",						NULL,NULL },
+	{ d_agup_radio_proc,	136,160,	45,	15,		2,	23,	0,		0,		1,	0,	"2048",						NULL,NULL },
+	{ d_agup_radio_proc,	136,180,	69,	15,		2,	23,	0,		0,		1,	0,	"Custom",					NULL,NULL },
+	{ d_agup_edit_proc,		205,177,	50,	20,		0,	0,	0,		0,		255,0,	eof_etext,					NULL,NULL },
+	{ d_agup_text_proc,		16,	205,	100,8,		2,	23,	0,		0,		0,	0,	"Color scheme:",			NULL,NULL },
 	{ d_agup_radio_proc,	16,	225,	100,15,		2,	23,	0,		0,		2,	0,	"Grayscale",				NULL,NULL },
 	{ d_agup_radio_proc,	16,	245,	100,15,		2,	23,	0,		0,		2,	0,	"Color",					NULL,NULL },
-	{ d_agup_text_proc,		136,225,	64,	8,		2,	23,	0,		0,		0,	0,	"Note range:",				NULL,NULL },
-	{ d_agup_edit_proc,		136,245,	40,	15,		2,	23,	0,		0,		3,	0,	eof_etext2,					NULL,NULL },
-	{ d_agup_text_proc,		180,250,	15,	8,		2,	23,	0,		0,		0,	0,	"to",						NULL,NULL },
-	{ d_agup_edit_proc,		196,245,	40,	15,		2,	23,	0,		0,		3,	0,	eof_etext3,					NULL,NULL },
-	{ d_agup_check_proc,	136,270,	45,	16,		2,	23,	0,		0,		1,	0,	"Enable",					NULL,NULL },
-	{ d_agup_check_proc,	16,	270,	45,	16,		2,	23,	0,		0,		1,	0,	"Log plot",					NULL,NULL },
+	{ d_agup_check_proc,	136,205,	100,16,		2,	23,	0,		0,		1,	0,	"Note range:",				NULL,NULL },
+	{ d_agup_edit_proc,		136,225,	40,	15,		2,	23,	0,		0,		3,	0,	eof_etext2,					NULL,NULL },
+	{ d_agup_text_proc,		180,230,	15,	8,		2,	23,	0,		0,		0,	0,	"to",						NULL,NULL },
+	{ d_agup_edit_proc,		196,225,	40,	15,		2,	23,	0,		0,		3,	0,	eof_etext3,					NULL,NULL },
+	{ d_agup_check_proc,	136,270,	120,16,		2,	23,	0,		0,		1,	0,	"Avg freq (slow)",			NULL,NULL },
+	{ d_agup_check_proc,	16,	270,	100,16,		2,	23,	0,		0,		1,	0,	"Log plot",					NULL,NULL },
 
 	{ d_agup_button_proc,	16,	298,	68,	28,		2,	23,	'\r',	D_EXIT,	0,	0,	"OK",						NULL,NULL },
 	{ d_agup_button_proc,	116,298,	68,	28,		2,	23,	0,		D_EXIT,	0,	0,	"Cancel",					NULL,NULL },
@@ -2071,12 +2070,11 @@ int eof_menu_song_spectrogram_settings(void)
 		= eof_spectrogram_settings_dialog[10].flags
 		= eof_spectrogram_settings_dialog[11].flags
 		= eof_spectrogram_settings_dialog[12].flags
-		= eof_spectrogram_settings_dialog[13].flags
 		= 0;
 	eof_etext[0] = '\0';
 
 	custom_windowsize = 1;
-	for(i=8;i<13;i++)
+	for(i=8;i<12;i++)
 	{
 		if(eof_spectrogram_windowsize == eof_spectrogram_settings_wsize[i-8])
 		{
@@ -2086,25 +2084,29 @@ int eof_menu_song_spectrogram_settings(void)
 	}
 	if(custom_windowsize)
 	{
-		eof_spectrogram_settings_dialog[13].flags = D_SELECTED;
+		eof_spectrogram_settings_dialog[12].flags = D_SELECTED;
 		(void) snprintf(eof_etext, sizeof(eof_etext) - 1, "%d", eof_spectrogram_windowsize);
 	}
 
 	//Set up the color scheme
-	eof_spectrogram_settings_dialog[16].flags = eof_spectrogram_settings_dialog[17].flags = 0;
-	eof_spectrogram_settings_dialog[16 + eof_spectrogram_colorscheme].flags = D_SELECTED;
+	eof_spectrogram_settings_dialog[15].flags = eof_spectrogram_settings_dialog[16].flags = 0;
+	eof_spectrogram_settings_dialog[15 + eof_spectrogram_colorscheme].flags = D_SELECTED;
 	
 	//Set up the note range
 	strcpy(eof_etext2, notefunc_freq_to_note(eof_spectrogram_startfreq));
 	strcpy(eof_etext3, notefunc_freq_to_note(eof_spectrogram_endfreq));
+
 	if(eof_spectrogram_userange) 
-		eof_spectrogram_settings_dialog[22].flags = D_SELECTED;
+		eof_spectrogram_settings_dialog[17].flags = D_SELECTED;
+
+	if(eof_spectrogram_avgbins)
+		eof_spectrogram_settings_dialog[21].flags = D_SELECTED;
 
 	if(eof_spectrogram_logplot) 
-		eof_spectrogram_settings_dialog[23].flags = D_SELECTED;
+		eof_spectrogram_settings_dialog[22].flags = D_SELECTED;
 
 	char is_dirty = 0;
-	if(eof_popup_dialog(eof_spectrogram_settings_dialog, 0) == 24)
+	if(eof_popup_dialog(eof_spectrogram_settings_dialog, 0) == 23)
 	{ //User clicked OK
 		if(eof_spectrogram_settings_dialog[2].flags == D_SELECTED)
 		{	//User selected to render into fretboard area
@@ -2133,7 +2135,7 @@ int eof_menu_song_spectrogram_settings(void)
 
 		prev_windowsize = eof_spectrogram_windowsize;
 		//Run through the window sizes
-		for(i=8;i<13;i++)
+		for(i=8;i<12;i++)
 		{
 			if(eof_spectrogram_settings_dialog[i].flags == D_SELECTED)
 			{
@@ -2141,7 +2143,7 @@ int eof_menu_song_spectrogram_settings(void)
 			}
 		}
 		//Check for the Other box
-		if(eof_spectrogram_settings_dialog[13].flags == D_SELECTED)
+		if(eof_spectrogram_settings_dialog[12].flags == D_SELECTED)
 		{
 			eof_spectrogram_windowsize = atoi(eof_etext);
 			if(eof_spectrogram_windowsize == 0)
@@ -2159,11 +2161,11 @@ int eof_menu_song_spectrogram_settings(void)
 		}
 
 		//Run through the color options
-		for(i=16;i<18;i++)
+		for(i=15;i<17;i++)
 		{
 			if(eof_spectrogram_settings_dialog[i].flags == D_SELECTED)
 			{
-				eof_spectrogram_colorscheme = i-16;
+				eof_spectrogram_colorscheme = i-15;
 			}
 		}
 
@@ -2182,13 +2184,14 @@ int eof_menu_song_spectrogram_settings(void)
 		char prevchk;
 
 		prevchk	= eof_spectrogram_userange;
-		eof_spectrogram_userange = (eof_spectrogram_settings_dialog[22].flags == D_SELECTED);
+		eof_spectrogram_userange = (eof_spectrogram_settings_dialog[17].flags == D_SELECTED);
 		if(eof_spectrogram_userange != prevchk) { is_dirty = 1; }
 
-		prevchk = eof_spectrogram_logplot;
-		eof_spectrogram_logplot = (eof_spectrogram_settings_dialog[23].flags == D_SELECTED);
-		if(eof_spectrogram_logplot != prevchk) { is_dirty = 1; }
+		eof_spectrogram_avgbins = (eof_spectrogram_settings_dialog[21].flags == D_SELECTED);
 
+		prevchk = eof_spectrogram_logplot;
+		eof_spectrogram_logplot = (eof_spectrogram_settings_dialog[22].flags == D_SELECTED);
+		if(eof_spectrogram_logplot != prevchk) { is_dirty = 1; }
 
 		if(is_dirty && (eof_spectrogram != NULL))
 		{ //Mark px_to_freq as dirty

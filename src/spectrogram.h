@@ -71,6 +71,7 @@ extern double eof_spectrogram_startfreq;
 extern double eof_spectrogram_endfreq;
 extern double eof_spectrogram_userange;
 extern double eof_spectrogram_logplot;
+extern double eof_spectrogram_avgbins;
 
 //Axis helper functions
 double eof_y_from_freq(long rate, double freq);
