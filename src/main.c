@@ -3491,6 +3491,12 @@ void eof_destroy_data(void)
 	eof_symbol_font = NULL;
 }
 
+void eof_close_button(void)
+{
+	//Artificially press the Esc key
+	key[KEY_ESC] = 1;
+}
+
 int eof_initialize(int argc, char * argv[])
 {
 	int i, eof_zoom_backup;
@@ -3505,6 +3511,7 @@ int eof_initialize(int argc, char * argv[])
 	allegro_init();
 
 	set_window_title("EOF - No Song");
+	set_close_button_callback(eof_close_button);
 	if(install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL))
 	{	//If Allegro failed to initialize the sound AND midi
 //		allegro_message("Can't set up MIDI!  Error: %s\nAttempting to init audio only",allegro_error);

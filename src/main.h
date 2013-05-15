@@ -559,6 +559,7 @@ void eof_lyric_logic(void);	//Performs various vocal editor logic
 void eof_note_logic(void);	//Performs various note catalog logic
 void eof_logic(void);		//Performs various editor logic
 void eof_render_lyric_preview(BITMAP * bp);	//Renders lyric preview lines (found by eof_find_lyric_preview_lines()) to the specified bitmap
+void eof_close_button(void);	//Close button callback
 int eof_initialize(int argc, char * argv[]);	//Initializes various values, checks for crash recovery, parses command line parameters, etc.
 #ifdef ALLEGRO_WINDOWS
 	int eof_initialize_windows(void);	//Performs additional initialization for the Windows platform
