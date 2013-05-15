@@ -5,6 +5,7 @@
 #define DEFAULT_STARTFREQ 27.5
 #define DEFAULT_ENDFREQ 4186
 #define MINFREQ 27.5
+//#define AVG_BINS
 
 struct spectrogramslice
 {
@@ -21,6 +22,15 @@ struct spectrogramchanneldata
 	double logheight;					//The logarithm of the height (cached in eof_render_spectrogram() to avoid recalculating for each column)
 };
 
+struct spectrogrampxtofreq
+{
+	unsigned long *map;
+
+	char dirty;
+	int height;
+	char is_log;
+};
+
 struct spectrogramstruct
 {
 	char *oggfilename;
@@ -35,15 +45,21 @@ struct spectrogramstruct
 	double log_max;						//Will store the logarithm of the product of the window size and the the spectrogram's zeroamp value
 	long rate;
 
-	unsigned long *px_to_freq;
-	int prevheight;
-	char prevlog;
+	struct spectrogrampxtofreq px_to_freq;
 
 	struct spectrogramchanneldata left;	//The amplitude and graph data for the audio's left channel
 	struct spectrogramchanneldata right;	//The amplitude and graph data for the audio's right channel (if applicable)
 };
 
+struct spectrogramcolorscalestruct
+{ // The current color scale for the spectrogram
+	int scalenum;
+	int maxval;
+	int *colortable;
+};
+
 extern struct spectrogramstruct *eof_spectrogram;	//Stores the spectrogram data
+extern struct spectrogramcolorscalestruct *eof_spectrogram_colorscale;
 extern char eof_display_spectrogram;				//Specifies whether the spectrogram display is enabled
 extern char eof_spectrogram_renderlocation;			//Specifies where and how high the graph will render (0 = fretboard area, 1 = editor window)
 extern char eof_spectrogram_renderleftchannel;		//Specifies whether the left channel's graph should render
@@ -59,7 +75,7 @@ extern double eof_spectrogram_logplot;
 //Axis helper functions
 double eof_y_from_freq(long rate, double freq);
 double eof_freq_from_y(long rate, double y); 
-void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram, int height);
+void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram);
 
 void eof_destroy_spectrogram(struct spectrogramstruct *ptr);
 	//frees memory used by the specified spectrogram structure
@@ -70,6 +86,7 @@ void eof_render_spectrogram_line(struct spectrogramstruct *spectrogram,struct sp
 	//Given the amplitude and the channel and spectrogram to process, draws the vertical line for the channel's spectrogram originating from point x and the channel's defined y axis coordinate
 void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spectrogramchanneldata *channel,struct spectrogramslice *ampdata, unsigned long x, unsigned long curms);
 int eof_color_scale(double value, double max, short int scalenum);
+void eof_generate_colorscale(char scalenum);
 
 struct spectrogramstruct *eof_create_spectrogram(char *oggfilename);
 	//Decompresses the specified OGG file into memory and creates spectrogram data

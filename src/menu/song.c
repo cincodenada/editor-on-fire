@@ -2019,15 +2019,15 @@ DIALOG eof_spectrogram_settings_dialog[] =
 	{ d_agup_radio_proc,		136,180,45,15,	2,   23,  0,    0,      1,	0,	"2048",           			NULL, NULL },
 	{ d_agup_radio_proc,		136,200,59,15,	2,   23,  0,    0,      1,	0,	"Other",           			NULL, NULL },
 	{ d_agup_edit_proc,      195,197,50,20,  0,   0,   0,    0,      255,0, eof_etext,					NULL, NULL },
-	{ d_agup_text_proc,		16,	225,64,	8,	2,   23,  0,    0,      0,	0,	"Color scheme:",			NULL, NULL },
-	{ d_agup_radio_proc,		16,	245,100,15,	2,   23,  0,    0,      2,	0,	"Grayscale",           		NULL, NULL },
-	{ d_agup_radio_proc,		16,	265,100,15,	2,   23,  0,    0,      2,	0,	"Color",           			NULL, NULL },
+	{ d_agup_text_proc,		16,	205,64,	8,	2,   23,  0,    0,      0,	0,	"Color scheme:",			NULL, NULL },
+	{ d_agup_radio_proc,		16,	225,100,15,	2,   23,  0,    0,      2,	0,	"Grayscale",           		NULL, NULL },
+	{ d_agup_radio_proc,		16,	245,100,15,	2,   23,  0,    0,      2,	0,	"Color",           			NULL, NULL },
 	{ d_agup_text_proc,		136,225,64,	8,	2,   23,  0,    0,      0,	0,	"Note range:",				NULL, NULL },
 	{ d_agup_edit_proc,		136,245,40,	15,	2,   23,  0,    0,      3,	0,	eof_etext2,					NULL, NULL },
 	{ d_agup_text_proc,		180,250,15,	8,	2,   23,  0,    0,      0,	0,	"to",						NULL, NULL },
 	{ d_agup_edit_proc,		196,245,40,	15,	2,   23,  0,    0,      3,	0,	eof_etext3,					NULL, NULL },
 	{ d_agup_check_proc,		136,270,45, 16,	2,   23,  0,    0,		1,	0,	"Enable",					NULL, NULL },
-	{ d_agup_check_proc,		16, 200,45, 16,	2,   23,  0,    0,		1,	0,	"Log plot",					NULL, NULL },
+	{ d_agup_check_proc,	16, 270,45, 16,	2,   23,  0,    0,		1,	0,	"Log plot",					NULL, NULL },
 	{ d_agup_button_proc,	16,	298,68,	28,	2,   23,  '\r',	D_EXIT, 0,	0,	"OK",             			NULL, NULL },
 	{ d_agup_button_proc,	116,298,68,	28,	2,   23,  0,	D_EXIT, 0,	0,	"Cancel",         			NULL, NULL },
 	{ NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL }
@@ -2102,37 +2102,31 @@ int eof_menu_song_spectrogram_settings(void)
 	if(eof_spectrogram_logplot) 
 		eof_spectrogram_settings_dialog[23].flags = D_SELECTED;
 
-	char needs_refit = 0;
+	char is_dirty = 0;
 	if(eof_popup_dialog(eof_spectrogram_settings_dialog, 0) == 24)
 	{ //User clicked OK
 		if(eof_spectrogram_settings_dialog[2].flags == D_SELECTED)
 		{	//User selected to render into fretboard area
-			if(eof_spectrogram_renderlocation == 1) { needs_refit = 1; }
 			eof_spectrogram_renderlocation = 0;
 		}
 		else
 		{	//User selected to render into editor window
-			if(eof_spectrogram_renderlocation == 0) { needs_refit = 1; }
 			eof_spectrogram_renderlocation = 1;
 		}
 		if(eof_spectrogram_settings_dialog[5].flags == D_SELECTED)
 		{	//User selected to render the left channel
-			if(eof_spectrogram_renderleftchannel == 0) { needs_refit = 1; }
 			eof_spectrogram_renderleftchannel = 1;
 		}
 		else
 		{
-			if(eof_spectrogram_renderleftchannel == 1) { needs_refit = 1; }
 			eof_spectrogram_renderleftchannel = 0;
 		}
 		if(eof_spectrogram_settings_dialog[6].flags == D_SELECTED)
 		{	//User selected to render the right channel
-			if(eof_spectrogram_renderrightchannel == 0) { needs_refit = 1; }
 			eof_spectrogram_renderrightchannel = 1;
 		}
 		else
 		{
-			if(eof_spectrogram_renderrightchannel == 1) { needs_refit = 1; }
 			eof_spectrogram_renderrightchannel = 0;
 		}
 
@@ -2176,27 +2170,28 @@ int eof_menu_song_spectrogram_settings(void)
 		double newfreq;
 
 		newfreq = notefunc_note_to_freq(eof_etext2);
-		if(eof_spectrogram_startfreq != newfreq) { needs_refit = 1; }
+		if(eof_spectrogram_startfreq != newfreq) { is_dirty = 1; }
 		eof_spectrogram_startfreq = newfreq;
 
 		newfreq = notefunc_note_to_freq(eof_etext3);
-		if(eof_spectrogram_endfreq != newfreq) { needs_refit = 1; }
+		if(eof_spectrogram_endfreq != newfreq) { is_dirty = 1; }
 		eof_spectrogram_endfreq = newfreq;
+
 
 		char prevchk;
 
 		prevchk	= eof_spectrogram_userange;
 		eof_spectrogram_userange = (eof_spectrogram_settings_dialog[22].flags == D_SELECTED);
-		if(eof_spectrogram_userange != prevchk) { needs_refit = 1; }
+		if(eof_spectrogram_userange != prevchk) { is_dirty = 1; }
 
 		prevchk = eof_spectrogram_logplot;
 		eof_spectrogram_logplot = (eof_spectrogram_settings_dialog[23].flags == D_SELECTED);
-		if(eof_spectrogram_logplot != prevchk) { needs_refit = 1; }
+		if(eof_spectrogram_logplot != prevchk) { is_dirty = 1; }
 
 
-		if(needs_refit && (eof_spectrogram != NULL))
-		{ //Clear prevheight to force regen
-			eof_spectrogram->prevheight = 0;
+		if(is_dirty && (eof_spectrogram != NULL))
+		{ //Mark px_to_freq as dirty
+			eof_spectrogram->px_to_freq.dirty = 1;
 		}
 	}
 	eof_fix_window_title();

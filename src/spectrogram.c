@@ -10,6 +10,7 @@
 #endif
 
 struct spectrogramstruct *eof_spectrogram = NULL;	//Stores the spectrogram data
+struct spectrogramcolorscalestruct *eof_spectrogram_colorscale=NULL;	//Stores the spectrogram data
 char eof_display_spectrogram = 0;					//Specifies whether the spectrogram display is enabled
 char eof_spectrogram_renderlocation = 0;			//Specifies where and how high the graph will render (0 = fretboard area, 1 = editor window)
 char eof_spectrogram_renderleftchannel = 1;			//Specifies whether the left channel's graph should render
@@ -50,15 +51,15 @@ void eof_destroy_spectrogram(struct spectrogramstruct *ptr)
 			}
 			free(ptr->right.slices);
 		}
-		if(ptr->px_to_freq)
-			free(ptr->px_to_freq);
+		if(ptr->px_to_freq.map)
+			free(ptr->px_to_freq.map);
 		free(ptr);
 	}
 }
 
 int eof_render_spectrogram(struct spectrogramstruct *spectrogram)
 {
-//	eof_log("eof_render_spectrogram() entered");
+	eof_log("eof_render_spectrogram() entered",1);
 
 	unsigned long x,startpixel;
 	unsigned long ycoord1,ycoord2;	//Stores the Y coordinates of graph 1's and 2's Y axis
@@ -161,8 +162,8 @@ int eof_render_spectrogram(struct spectrogramstruct *spectrogram)
 		return 1;
 	}
 
-	//Calculate the axis bins - second param toggles log plot
-	eof_spectrogram_calculate_px_to_freq(spectrogram, height);
+	//Calculate the y axis bins
+	eof_spectrogram_calculate_px_to_freq(spectrogram);
 
 //render graph from left to right, one pixel at a time (each pixel represents eof_zoom number of milliseconds of audio)
 	//for(x=startpixel;x < eof_window_editor->w;x++)
@@ -182,21 +183,45 @@ int eof_render_spectrogram(struct spectrogramstruct *spectrogram)
 	return 0;
 }
 
-void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram, int height)
+void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram)
 {
-	if(height == spectrogram->prevheight)
+	int height = 0;
+
+	//Determine the height we should use from the channels
+	if(spectrogram->left.height)
 	{
-		eof_log("Using old px_to_freq table",1);
+		height = spectrogram->left.height;
+	}
+	if(spectrogram->right.height > height)
+	{
+		height = spectrogram->right.height;
+	}
+
+	//Just in case it didn't get marked
+	if(height != spectrogram->px_to_freq.height)
+	{
+		spectrogram->px_to_freq.dirty = 1;
+	}
+	
+	spectrogram->px_to_freq.height = height;
+
+	if(spectrogram->px_to_freq.dirty == 0)
+	{
+		eof_log("Using existing px_to_freq table",1);
 		return;
 	}
-	else
-	{
-		spectrogram->prevheight = height;
-	}
-	eof_log("Recreating px_to_freq table",1);
 
-	free(spectrogram->px_to_freq);
-	spectrogram->px_to_freq = (unsigned long *)malloc((height+1) * sizeof(unsigned long));
+	eof_log("Recreating px_to_freq table",1);
+	spectrogram->px_to_freq.dirty = 0;
+
+	if(spectrogram->px_to_freq.map)
+		free(spectrogram->px_to_freq.map);
+
+	spectrogram->px_to_freq.map = (unsigned long *)malloc((height+1) * sizeof(unsigned long));
+	if(spectrogram->px_to_freq.map == NULL)
+	{
+		eof_log("Couldn't allocate memory for px_to_freq map!",1);
+	}
 
 	double startfreq = DEFAULT_STARTFREQ;
 	double endfreq = DEFAULT_ENDFREQ;
@@ -215,10 +240,28 @@ void eof_spectrogram_calculate_px_to_freq(struct spectrogramstruct *spectrogram,
 	//Internal loop vars
 	int y;
 	double freq;
-	for(y=0;y < height;y++)
+	for(y=0;y <= height;y++)
 	{
 		freq = eof_freq_from_y(spectrogram->rate, a + (double)y*yfrac);
-		spectrogram->px_to_freq[y] = (unsigned long)ceil(freq/binsize);
+		spectrogram->px_to_freq.map[y] = (unsigned long)ceil(freq/binsize);
+	}
+}
+
+unsigned long spectrogram_get_freq_from_px(struct spectrogramstruct *spectrogram, int px) {
+	if(spectrogram->px_to_freq.map == NULL)
+	{
+		return 0;
+	} 
+	else
+	{
+		if(px > 0 && px <= spectrogram->px_to_freq.height)
+		{
+			return spectrogram->px_to_freq.map[px];
+		}
+		else
+		{
+			return 0;
+		}
 	}
 }
 
@@ -251,10 +294,12 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 	unsigned long yoffset;	//The offset from the y axis coordinate to render the line to
 	unsigned long curslice;
 	unsigned long actualzero;
-	unsigned long sampoffset;
 	double avg;
 	unsigned long cursamp;
+#ifdef AVG_BINS
 	unsigned long nextsamp;
+	unsigned long sampoffset;
+#endif
 
 	if(spectrogram != NULL)
 	{
@@ -263,8 +308,9 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 		for(yoffset=0;yoffset < channel->height-1;yoffset++)
 		{
 			//Find the bins for these frequencies
-			cursamp = spectrogram->px_to_freq[yoffset];
-			nextsamp = spectrogram->px_to_freq[yoffset+1];
+			cursamp = spectrogram_get_freq_from_px(spectrogram, yoffset);
+#ifdef AVG_BINS
+			nextsamp = spectrogram_get_freq_from_px(yoffset+1);
 			if(cursamp == nextsamp)
 			{
 				nextsamp = cursamp + 1;
@@ -277,6 +323,9 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 				avg += ampdata[curslice].amplist[sampoffset];
 			}
 			avg = avg/(double)(nextsamp - cursamp);
+#else
+			avg = ampdata[curslice].amplist[cursamp];
+#endif
 
 			putpixel(eof_window_editor->screen, x, actualzero - yoffset, eof_color_scale(log(avg),spectrogram->log_max,eof_spectrogram_colorscheme));
 			//To test a color scale
@@ -287,43 +336,89 @@ void eof_render_spectrogram_col(struct spectrogramstruct *spectrogram,struct spe
 
 int eof_color_scale(double value, double max, short int scalenum)
 {
-	int cnt;
-	int rgb[3] = {0,0,0};
-	int scaledval;
+	eof_generate_colorscale(scalenum);
 
-	value = value/max;
-	if(value < 0.0)
+	if((eof_spectrogram_colorscale != NULL) && (eof_spectrogram_colorscale->colortable != NULL)) 
 	{
-		value = 0.0;
+		value = value/max;
+		if(value < 0.0)
+		{
+			value = 0.0;
+		}
+		if(value > 1.0)
+		{
+			value = 1.0;
+		}
+
+		return eof_spectrogram_colorscale->colortable[(int)(value * eof_spectrogram_colorscale->maxval)];
 	}
-	if(value > 1.0)
+	else
 	{
-		value = 1.0;
+		return 0;
 	}
-	switch(scalenum)
+}
+
+void eof_generate_colorscale(char scalenum) 
+{
+	if((eof_spectrogram_colorscale != NULL) && (eof_spectrogram_colorscale->scalenum == scalenum))
+		return;
+
+	//Destroy any previous colorscale
+	if(eof_spectrogram_colorscale != NULL) 
 	{
-		case 0:
-			for(cnt=0;cnt<3;cnt++) { rgb[cnt] = value * 255.0; }
-		break;
-		case 1:
-			scaledval = value * 1280.0;
-			rgb[0] = 384.0 - abs(scaledval-896.0);
-			rgb[1] = 384.0 - abs(scaledval-640.0);
-			rgb[2] = 384.0 - abs(scaledval-384.0);
-			for(cnt=0;cnt<3;cnt++)
+		if(eof_spectrogram_colorscale->colortable != NULL)
+		{
+			free(eof_spectrogram_colorscale->colortable);
+		}
+		free(eof_spectrogram_colorscale);
+	}
+
+	eof_spectrogram_colorscale = (struct spectrogramcolorscalestruct *)malloc(sizeof(struct spectrogramcolorscalestruct));
+	
+	if(eof_spectrogram_colorscale != NULL)
+	{
+		eof_spectrogram_colorscale->scalenum = scalenum;
+		switch(scalenum) 
+		{
+			case 0:
+				eof_spectrogram_colorscale->maxval = 255.0;
+				break;
+			case 1:
+				eof_spectrogram_colorscale->maxval = 1280.0;
+				break;
+		}
+
+		eof_spectrogram_colorscale->colortable = (int *)malloc((eof_spectrogram_colorscale->maxval+1) * sizeof(int));
+
+		int rgb[3] = {0,0,0};
+		int cnt, scaledval;
+		for(scaledval = 0; scaledval <= eof_spectrogram_colorscale->maxval; scaledval++)
+		{
+			switch(scalenum) 
 			{
-				if(rgb[cnt] > 255)
-				{
-					rgb[cnt] = 255;
-				}
-				if(rgb[cnt] < 0)
-				{
-					rgb[cnt] = 0;
-				}
+				case 0:
+					for(cnt=0;cnt<3;cnt++) { rgb[cnt] = scaledval; }
+				break;
+				case 1:
+					rgb[0] = 384.0 - abs(scaledval-896.0);
+					rgb[1] = 384.0 - abs(scaledval-640.0);
+					rgb[2] = 384.0 - abs(scaledval-384.0);
+					for(cnt=0;cnt<3;cnt++)
+					{
+						if(rgb[cnt] > 255)
+						{
+							rgb[cnt] = 255;
+						}
+						if(rgb[cnt] < 0)
+						{
+							rgb[cnt] = 0;
+						}
+					}
+					break;
 			}
-			break;
+			eof_spectrogram_colorscale->colortable[scaledval] = makecol(rgb[0],rgb[1],rgb[2]);
+		}
 	}
-	return makecol(rgb[0],rgb[1],rgb[2]);
 }
 
 void eof_render_spectrogram_line(struct spectrogramstruct *spectrogram,struct spectrogramchanneldata *channel,unsigned amp,unsigned long x,int color)
